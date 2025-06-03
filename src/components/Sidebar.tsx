@@ -1,6 +1,5 @@
-
 import { cn } from "@/lib/utils";
-import { Mail, Calendar, FileText, Inbox, Star, Send, Archive, Trash2, Tag, Zap } from "lucide-react";
+import { Mail, Calendar, FileText, Inbox, Star, Send, Archive, Trash2, Tag, Zap, Bot } from "lucide-react";
 import { ViewType } from "@/pages/Index";
 
 interface SidebarProps {
@@ -10,6 +9,7 @@ interface SidebarProps {
 
 export const Sidebar = ({ currentView, onViewChange }: SidebarProps) => {
   const mainMenuItems = [
+    { id: "ai" as ViewType, label: "AI Assistant", icon: Bot, count: undefined },
     { id: "inbox" as ViewType, label: "Inbox", icon: Inbox, count: 12 },
     { id: "calendar" as ViewType, label: "Calendar", icon: Calendar },
     { id: "notes" as ViewType, label: "Notes", icon: FileText },
@@ -51,7 +51,10 @@ export const Sidebar = ({ currentView, onViewChange }: SidebarProps) => {
                       : "text-gray-700 hover:bg-gray-50"
                   )}
                 >
-                  <item.icon className="h-4 w-4" />
+                  <item.icon className={cn(
+                    "h-4 w-4",
+                    item.id === "ai" ? "text-purple-600" : ""
+                  )} />
                   <span className="flex-1 text-left">{item.label}</span>
                   {item.count && (
                     <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded-full">

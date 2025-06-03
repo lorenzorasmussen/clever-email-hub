@@ -5,11 +5,12 @@ import { EmailList } from "@/components/EmailList";
 import { Calendar } from "@/components/Calendar";
 import { Notes } from "@/components/Notes";
 import { EmailView } from "@/components/EmailView";
+import { AIChatInterface } from "@/components/AIChatInterface";
 
-export type ViewType = "inbox" | "calendar" | "notes";
+export type ViewType = "ai" | "inbox" | "calendar" | "notes";
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<ViewType>("inbox");
+  const [currentView, setCurrentView] = useState<ViewType>("ai");
   const [selectedEmail, setSelectedEmail] = useState<any>(null);
 
   const renderMainContent = () => {
@@ -18,6 +19,8 @@ const Index = () => {
     }
 
     switch (currentView) {
+      case "ai":
+        return <AIChatInterface />;
       case "inbox":
         return <EmailList onEmailSelect={setSelectedEmail} />;
       case "calendar":
@@ -25,7 +28,7 @@ const Index = () => {
       case "notes":
         return <Notes />;
       default:
-        return <EmailList onEmailSelect={setSelectedEmail} />;
+        return <AIChatInterface />;
     }
   };
 
