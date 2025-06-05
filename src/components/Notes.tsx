@@ -3,86 +3,60 @@ import { Plus, Search, Pin, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-
-interface Note {
-  id: string;
-  title: string;
-  content: string;
-  color: string;
-  isPinned: boolean;
-  createdAt: string;
-}
-
-const mockNotes: Note[] = [
-  {
-    id: "1",
-    title: "Meeting Notes - Q4 Planning",
-    content: "Key discussion points:\n- Budget allocation for next quarter\n- New team member onboarding\n- Product roadmap updates\n- Marketing strategy review",
-    color: "bg-yellow-100",
-    isPinned: true,
-    createdAt: "2024-01-15"
-  },
-  {
-    id: "2",
-    title: "AI Features Ideas",
-    content: "Brainstorming session results:\n- Smart email categorization\n- Automated response suggestions\n- Calendar conflict detection\n- Priority inbox sorting",
-    color: "bg-blue-100",
-    isPinned: false,
-    createdAt: "2024-01-14"
-  },
-  {
-    id: "3",
-    title: "Shopping List",
-    content: "Groceries:\n- Milk\n- Eggs\n- Bread\n- Fruits\n- Vegetables\n- Coffee",
-    color: "bg-green-100",
-    isPinned: false,
-    createdAt: "2024-01-13"
-  },
-  {
-    id: "4",
-    title: "Book Recommendations",
-    content: "Must read:\n- 'The Pragmatic Programmer'\n- 'Clean Code'\n- 'Designing Data-Intensive Applications'\n- 'The Phoenix Project'",
-    color: "bg-purple-100",
-    isPinned: true,
-    createdAt: "2024-01-12"
-  }
-];
+import { useNotes } from "@/hooks/useNotes";
 
 export const Notes = () => {
-  const [notes, setNotes] = useState<Note[]>(mockNotes);
   const [searchTerm, setSearchTerm] = useState("");
   const [showNewNote, setShowNewNote] = useState(false);
   const [newNote, setNewNote] = useState({ title: "", content: "" });
+  
+  const { notes, isLoading, createNote, togglePin } = useNotes();
 
   const filteredNotes = notes.filter(note =>
     note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    note.content.toLowerCase().includes(searchTerm.toLowerCase())
+    (note.content && note.content.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const pinnedNotes = filteredNotes.filter(note => note.isPinned);
-  const unpinnedNotes = filteredNotes.filter(note => !note.isPinned);
+  const pinnedNotes = filteredNotes.filter(note => note.is_pinned);
+  const unpinnedNotes = filteredNotes.filter(note => !note.is_pinned);
 
   const handleCreateNote = () => {
     if (newNote.title.trim() || newNote.content.trim()) {
-      const note: Note = {
-        id: Date.now().toString(),
+      createNote({
         title: newNote.title || "Untitled",
         content: newNote.content,
-        color: "bg-yellow-100",
-        isPinned: false,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      setNotes([note, ...notes]);
+        color: "bg-yellow-100"
+      });
       setNewNote({ title: "", content: "" });
       setShowNewNote(false);
     }
   };
 
-  const togglePin = (noteId: string) => {
-    setNotes(notes.map(note =>
-      note.id === noteId ? { ...note, isPinned: !note.isPinned } : note
-    ));
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col h-full bg-white">
+        <div className="p-4 border-b border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-semibold text-gray-900">Notes</h1>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              New Note
+            </Button>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading notes...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -166,6 +140,7 @@ export const Notes = () => {
         {filteredNotes.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500">No notes found.</p>
+            <p className="text-sm text-gray-400 mt-1">Create your first note to get started!</p>
           </div>
         )}
       </div>
@@ -174,11 +149,22 @@ export const Notes = () => {
 };
 
 interface NoteCardProps {
-  note: Note;
-  onTogglePin: (noteId: string) => void;
+  note: {
+    id: string;
+    title: string;
+    content: string | null;
+    color: string;
+    is_pinned: boolean;
+    created_at: string;
+  };
+  onTogglePin: (args: { id: string; isPinned: boolean }) => void;
 }
 
 const NoteCard = ({ note, onTogglePin }: NoteCardProps) => {
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
   return (
     <div className={`${note.color} p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer group`}>
       <div className="flex items-start justify-between mb-2">
@@ -189,17 +175,19 @@ const NoteCard = ({ note, onTogglePin }: NoteCardProps) => {
           className="opacity-0 group-hover:opacity-100 transition-opacity"
           onClick={(e) => {
             e.stopPropagation();
-            onTogglePin(note.id);
+            onTogglePin({ id: note.id, isPinned: note.is_pinned });
           }}
         >
-          <Pin className={`h-4 w-4 ${note.isPinned ? "fill-current" : ""}`} />
+          <Pin className={`h-4 w-4 ${note.is_pinned ? "fill-current" : ""}`} />
         </Button>
       </div>
-      <p className="text-sm text-gray-700 line-clamp-4 whitespace-pre-wrap mb-3">
-        {note.content}
-      </p>
+      {note.content && (
+        <p className="text-sm text-gray-700 line-clamp-4 whitespace-pre-wrap mb-3">
+          {note.content}
+        </p>
+      )}
       <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-500">{note.createdAt}</span>
+        <span className="text-xs text-gray-500">{formatDate(note.created_at)}</span>
         <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
           <Palette className="h-4 w-4" />
         </Button>

@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      calendar_events: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          end_time: string
+          event_type: string | null
+          id: string
+          start_time: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          end_time: string
+          event_type?: string | null
+          id?: string
+          start_time: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          end_time?: string
+          event_type?: string | null
+          id?: string
+          start_time?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       Data: {
         Row: {
           created_at: string
@@ -30,6 +69,90 @@ export type Database = {
           email_header?: string | null
           id?: number
           label?: string | null
+        }
+        Relationships: []
+      }
+      emails: {
+        Row: {
+          ai_summary: string | null
+          ai_tags: string[] | null
+          content: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          is_starred: boolean
+          preview: string | null
+          priority: string | null
+          sender: string
+          subject: string
+          time: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_summary?: string | null
+          ai_tags?: string[] | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          is_starred?: boolean
+          preview?: string | null
+          priority?: string | null
+          sender: string
+          subject: string
+          time?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_summary?: string | null
+          ai_tags?: string[] | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          is_starred?: boolean
+          preview?: string | null
+          priority?: string | null
+          sender?: string
+          subject?: string
+          time?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notes: {
+        Row: {
+          color: string | null
+          content: string | null
+          created_at: string
+          id: string
+          is_pinned: boolean
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_pinned?: boolean
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_pinned?: boolean
+          title?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
