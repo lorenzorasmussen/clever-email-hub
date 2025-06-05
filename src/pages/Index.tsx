@@ -7,15 +7,16 @@ import { Calendar } from "@/components/Calendar";
 import { Notes } from "@/components/Notes";
 import { EmailView } from "@/components/EmailView";
 import { AIChatInterface } from "@/components/AIChatInterface";
+import { Dashboard } from "@/components/Dashboard";
 import { Button } from "@/components/ui/button";
 import { LogOut, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-export type ViewType = "ai" | "inbox" | "calendar" | "notes";
+export type ViewType = "dashboard" | "ai" | "inbox" | "calendar" | "notes";
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<ViewType>("ai");
+  const [currentView, setCurrentView] = useState<ViewType>("dashboard");
   const [selectedEmail, setSelectedEmail] = useState<any>(null);
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
@@ -63,12 +64,25 @@ const Index = () => {
     }
   };
 
+  const getPageTitle = () => {
+    switch (currentView) {
+      case "dashboard": return "Dashboard";
+      case "ai": return "AI Assistant";
+      case "inbox": return "Inbox";
+      case "calendar": return "Calendar";
+      case "notes": return "Notes";
+      default: return "Dashboard";
+    }
+  };
+
   const renderMainContent = () => {
     if (selectedEmail) {
       return <EmailView email={selectedEmail} onBack={() => setSelectedEmail(null)} />;
     }
 
     switch (currentView) {
+      case "dashboard":
+        return <Dashboard />;
       case "ai":
         return <AIChatInterface />;
       case "inbox":
@@ -78,7 +92,7 @@ const Index = () => {
       case "notes":
         return <Notes />;
       default:
-        return <AIChatInterface />;
+        return <Dashboard />;
     }
   };
 
@@ -90,10 +104,7 @@ const Index = () => {
         {/* Header with user info */}
         <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">
-            {currentView === "ai" && "AI Assistant"}
-            {currentView === "inbox" && "Inbox"}
-            {currentView === "calendar" && "Calendar"}
-            {currentView === "notes" && "Notes"}
+            {getPageTitle()}
           </h2>
           
           <div className="flex items-center gap-3">
