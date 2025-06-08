@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,9 +15,16 @@ const Auth = () => {
   const [fullName, setFullName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
+  const { user, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const handleDemoLogin = () => {
     // Simply navigate to the main app in demo mode
@@ -54,12 +61,23 @@ const Auth = () => {
         });
       } else {
         await signInWithEmail(email, password);
-        navigate('/');
+        // Navigation will happen automatically via useEffect
       }
     } catch (error: any) {
+      let errorMessage = error.message;
+      
+      // Handle common Supabase auth errors
+      if (errorMessage.includes('Invalid login credentials')) {
+        errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+      } else if (errorMessage.includes('User already registered')) {
+        errorMessage = 'An account with this email already exists. Try signing in instead.';
+      } else if (errorMessage.includes('Email not confirmed')) {
+        errorMessage = 'Please check your email and click the confirmation link before signing in.';
+      }
+
       toast({
         title: "Error",
-        description: error.message || `Failed to ${isSignUp ? 'sign up' : 'sign in'}`,
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -105,8 +123,8 @@ const Auth = () => {
             </CardTitle>
             <CardDescription>
               {isSignUp 
-                ? 'Sign up for full access to Gmail AI' 
-                : 'Sign in to your Gmail AI account'
+                ? 'Sign up for full access to Gmail AI with secure authentication' 
+                : 'Sign in to your Gmail AI account with Supabase authentication'
               }
             </CardDescription>
           </CardHeader>
@@ -187,6 +205,17 @@ const Auth = () => {
                   : "Don't have an account? Sign up"
                 }
               </button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Security Notice */}
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="pt-6">
+            <div className="text-center text-sm text-green-700">
+              🔒 Secured by Supabase Authentication
+              <br />
+              Your data is protected with Row Level Security
             </div>
           </CardContent>
         </Card>

@@ -9,12 +9,13 @@ import { EmailView } from "@/components/EmailView";
 import { AIChatInterface } from "@/components/AIChatInterface";
 import { EnhancedDashboard } from "@/components/EnhancedDashboard";
 import { DemoDataProvider } from "@/components/DemoDataProvider";
+import { AuthConfigPanel } from "@/components/AuthConfigPanel";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Sparkles } from "lucide-react";
+import { LogOut, User, Sparkles, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-export type ViewType = "dashboard" | "ai" | "inbox" | "calendar" | "notes";
+export type ViewType = "dashboard" | "ai" | "inbox" | "calendar" | "notes" | "auth-config";
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<ViewType>("dashboard");
@@ -33,6 +34,13 @@ const Index = () => {
 
   const currentUser = user || demoUser;
   const isDemoMode = !user;
+
+  // Redirect to auth if not logged in and not in demo mode
+  useEffect(() => {
+    if (!loading && !user && !isDemoMode) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate, isDemoMode]);
 
   const handleSignOut = async () => {
     if (isDemoMode) {
@@ -55,6 +63,7 @@ const Index = () => {
       case "inbox": return "Inbox";
       case "calendar": return "Calendar";
       case "notes": return "Notes";
+      case "auth-config": return "Authentication Settings";
       default: return "Dashboard";
     }
   };
@@ -75,6 +84,12 @@ const Index = () => {
         return <Calendar />;
       case "notes":
         return <Notes />;
+      case "auth-config":
+        return (
+          <div className="p-6">
+            <AuthConfigPanel />
+          </div>
+        );
       default:
         return <EnhancedDashboard />;
     }
@@ -95,7 +110,11 @@ const Index = () => {
   return (
     <DemoDataProvider>
       <div className="flex h-screen bg-gray-50">
-        <ModernSidebar currentView={currentView} onViewChange={setCurrentView} />
+        <ModernSidebar 
+          currentView={currentView} 
+          onViewChange={setCurrentView}
+          showAuthConfig={!isDemoMode}
+        />
         
         <div className="flex-1 flex flex-col min-w-0">
           {/* Enhanced Header */}
@@ -108,6 +127,12 @@ const Index = () => {
                 <div className="flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-purple-100 to-blue-100 rounded-full">
                   <Sparkles className="h-3 w-3 text-purple-600" />
                   <span className="text-xs font-medium text-purple-700">Demo Mode</span>
+                </div>
+              )}
+              {!isDemoMode && (
+                <div className="flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-green-100 to-blue-100 rounded-full">
+                  <Settings className="h-3 w-3 text-green-600" />
+                  <span className="text-xs font-medium text-green-700">Authenticated</span>
                 </div>
               )}
             </div>
