@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ModernSidebar } from "@/components/ModernSidebar";
@@ -14,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { LogOut, User, Sparkles, Settings, Wifi } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 
 export type ViewType = "dashboard" | "ai" | "inbox" | "calendar" | "notes" | "auth-config";
 
