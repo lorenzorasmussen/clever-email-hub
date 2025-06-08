@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ModernSidebar } from "@/components/ModernSidebar";
@@ -10,7 +11,7 @@ import { EnhancedDashboard } from "@/components/EnhancedDashboard";
 import { DemoDataProvider } from "@/components/DemoDataProvider";
 import { AuthConfigPanel } from "@/components/AuthConfigPanel";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Sparkles, Settings, Wifi } from "lucide-react";
+import { LogOut, User, Sparkles, Settings, Wifi, WifiOff } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -78,7 +79,7 @@ const Index = () => {
       case "inbox": return "Inbox";
       case "calendar": return "Calendar";
       case "notes": return "Notes";
-      case "auth-config": return "Authentication Settings";
+      case "auth-config": return "Auth Settings";
       default: return "Dashboard";
     }
   };
@@ -115,8 +116,8 @@ const Index = () => {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center animate-scale-in">
-          <div className="loading-spinner h-12 w-12 mx-auto mb-4"></div>
-          <p className="text-white/80 loading-dots">Loading</p>
+          <div className="loading-spinner mx-auto mb-4"></div>
+          <p className="text-primary text-lg loading-dots">Loading</p>
         </div>
       </div>
     );
@@ -132,49 +133,58 @@ const Index = () => {
         />
         
         <div className="flex-1 flex flex-col min-w-0 md:ml-0">
-          {/* Enhanced Header */}
-          <div className="glass backdrop-blur-xl border-b border-white/10 mobile-padding py-4 flex items-center justify-between animate-slide-up">
+          {/* Enhanced Header with better accessibility */}
+          <header className="glass backdrop-blur-xl border-b border-white/10 mobile-padding py-4 flex items-center justify-between animate-slide-up">
             <div className="flex items-center gap-4">
-              <div className="md:hidden w-12" /> {/* Spacer for mobile menu button */}
-              <h2 className="text-xl md:text-2xl font-semibold text-white">
-                {getPageTitle()}
-              </h2>
-              {isDemoMode && (
-                <div className="hidden sm:flex items-center gap-2 px-3 py-1 glass rounded-full animate-bounce-subtle">
-                  <Sparkles className="h-3 w-3 text-purple-300" />
-                  <span className="text-xs font-medium text-purple-200">Demo Mode</span>
+              <div className="md:hidden w-12" />
+              <div>
+                <h1 className="text-xl md:text-2xl font-semibold text-primary">
+                  {getPageTitle()}
+                </h1>
+                <div className="flex items-center gap-3 mt-1">
+                  {isDemoMode ? (
+                    <div className="status-demo animate-bounce-subtle">
+                      <Sparkles className="h-3 w-3" />
+                      <span className="hidden sm:inline">Demo Mode</span>
+                    </div>
+                  ) : (
+                    <div className="status-auth">
+                      <Settings className="h-3 w-3" />
+                      <span className="hidden sm:inline">Authenticated</span>
+                    </div>
+                  )}
                 </div>
-              )}
-              {!isDemoMode && (
-                <div className="hidden sm:flex items-center gap-2 px-3 py-1 glass rounded-full">
-                  <Settings className="h-3 w-3 text-green-300" />
-                  <span className="text-xs font-medium text-green-200">Authenticated</span>
-                </div>
-              )}
+              </div>
             </div>
             
-            <div className="flex items-center gap-2 md:gap-4">
-              {/* Connection status */}
+            <div className="flex items-center gap-3">
+              {/* Connection status with better accessibility */}
               <div className={cn(
-                "flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-all duration-200",
-                isOnline ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300"
+                "transition-all duration-200",
+                isOnline ? "status-online" : "status-offline"
               )}>
-                <Wifi className="h-3 w-3" />
+                {isOnline ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
                 <span className="hidden sm:inline">{isOnline ? 'Online' : 'Offline'}</span>
+                <span className="sr-only">Connection status: {isOnline ? 'Connected' : 'Disconnected'}</span>
               </div>
 
+              {/* User profile section */}
               <div className="flex items-center gap-3">
-                <Avatar className="h-8 w-8 md:h-10 md:w-10 ring-2 ring-white/20 shadow-lg transition-transform duration-200 hover:scale-110">
-                  <AvatarImage src={currentUser.user_metadata?.avatar_url} />
+                <Avatar className="h-10 w-10 ring-2 ring-white/20 shadow-lg transition-transform duration-200 hover:scale-110">
+                  <AvatarImage 
+                    src={currentUser.user_metadata?.avatar_url} 
+                    alt={`${currentUser.user_metadata?.full_name || currentUser.email}'s avatar`}
+                  />
                   <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                    <User className="h-4 w-4" />
+                    <User className="h-5 w-5" />
                   </AvatarFallback>
                 </Avatar>
+                
                 <div className="hidden sm:block">
-                  <div className="text-sm font-medium text-white">
+                  <div className="text-sm font-medium text-primary">
                     {currentUser.user_metadata?.full_name || currentUser.email}
                   </div>
-                  <div className="text-xs text-white/60">
+                  <div className="text-xs text-secondary">
                     {isDemoMode ? "Demo User" : "Authenticated"}
                   </div>
                 </div>
@@ -184,16 +194,21 @@ const Index = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={handleSignOut}
-                className="text-white/80 hover:text-white hover:bg-white/10"
+                className="text-secondary hover:text-primary hover:bg-white/10 mobile-button"
+                aria-label={isDemoMode ? "Go to login page" : "Sign out of account"}
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">{isDemoMode ? "Login" : "Sign Out"}</span>
               </Button>
             </div>
-          </div>
+          </header>
 
-          {/* Main content */}
-          <main className="flex-1 overflow-auto">
+          {/* Main content with skip link for accessibility */}
+          <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-white px-4 py-2 rounded">
+            Skip to main content
+          </a>
+          
+          <main id="main-content" className="flex-1 overflow-auto" role="main">
             <div className="animate-fade-in">
               {renderMainContent()}
             </div>
