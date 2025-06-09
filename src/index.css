@@ -243,7 +243,7 @@
 
   /* Enhanced loading animations */
   .loading-spinner {
-    @apply animate-spin rounded-full border-3 border-gray-300 border-t-blue-500;
+    @apply animate-spin rounded-full border-2 border-gray-300 border-t-blue-500;
     width: 20px;
     height: 20px;
   }
