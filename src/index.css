@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -112,6 +111,8 @@
   body {
     @apply bg-background text-foreground;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     min-height: 100vh;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
   }
@@ -138,14 +139,14 @@
 
   /* Focus indicators for accessibility */
   *:focus-visible {
-    outline: 2px solid #60a5fa;
+    outline: 2px solid #3b82f6;
     outline-offset: 2px;
     border-radius: 4px;
   }
 
   /* Better button focus states */
   button:focus-visible {
-    outline: 2px solid #60a5fa;
+    outline: 2px solid #3b82f6;
     outline-offset: 2px;
   }
 }
@@ -153,22 +154,22 @@
 @layer components {
   /* Enhanced glass morphism with better contrast */
   .glass {
-    background: var(--glass-bg);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
   }
 
   .glass-card {
-    @apply glass rounded-xl transition-all duration-300 hover:shadow-2xl hover:backdrop-blur-xl;
+    @apply glass rounded-xl transition-all duration-300 hover:shadow-2xl;
     border: 1px solid rgba(255, 255, 255, 0.3);
   }
 
   .glass-button {
     @apply glass rounded-lg px-4 py-3 font-medium transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95;
     border: 1px solid rgba(255, 255, 255, 0.3);
-    min-height: 44px; /* Touch-friendly size */
+    min-height: 44px;
   }
 
   .glass-sidebar {
@@ -180,15 +181,15 @@
 
   /* Text utilities with better contrast */
   .text-primary {
-    color: var(--text-primary);
+    color: #1f2937;
   }
 
   .text-secondary {
-    color: var(--text-secondary);
+    color: #4b5563;
   }
 
   .text-muted {
-    color: var(--text-muted);
+    color: #6b7280;
   }
 
   /* Animation utilities */
@@ -231,14 +232,14 @@
   }
 
   .btn-secondary {
-    @apply glass-button border border-white/30;
-    color: var(--text-primary);
+    @apply glass-button border border-gray-200;
+    color: #374151;
     min-height: 44px;
   }
 
   .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(156, 163, 175, 0.4);
   }
 
   /* Enhanced loading animations */
