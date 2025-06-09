@@ -1,467 +1,408 @@
+
 import { useState } from "react";
-import { Plus, Search, Filter, CheckCircle2, Circle, Star, Calendar, Tag, Trash2, Edit3, MoreHorizontal } from "lucide-react";
+import { 
+  Plus, Search, Filter, CheckCircle2, Circle, Star, Calendar, Tag, Trash2, 
+  Edit3, MoreHorizontal, CalendarIcon, Download, Users, BarChart3, Clock,
+  ArrowUpDown, FileDown
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { useNotes } from "@/hooks/useNotes";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { useTaskManagement } from "@/hooks/useTaskManagement";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
-interface TaskNoteProps {
-  className?: string;
-}
+export const TaskNote = () => {
+  const {
+    tasks,
+    searchTerm,
+    setSearchTerm,
+    filterCategory,
+    setFilterCategory,
+    filterPriority,
+    setFilterPriority,
+    sortBy,
+    setSortBy,
+    createTask,
+    updateTask,
+    deleteTask,
+    exportTasks,
+    getProductivityMetrics
+  } = useTaskManagement();
 
-export const TaskNote = ({ className }: TaskNoteProps) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState<"all" | "tasks" | "notes" | "completed">("all");
-  const [showNewItem, setShowNewItem] = useState(false);
-  const [newItemType, setNewItemType] = useState<"note" | "task">("note");
-  const [newItem, setNewItem] = useState({ 
-    title: "", 
-    content: "", 
-    isTask: false, 
-    isCompleted: false,
-    priority: "medium" as "low" | "medium" | "high",
+  const [showNewTask, setShowNewTask] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: '',
+    content: '',
+    priority: 'medium' as 'low' | 'medium' | 'high',
+    dueDate: null as Date | null,
+    category: 'General',
     tags: [] as string[]
   });
-  
-  const { notes, isLoading, createNote, updateNote, deleteNote, togglePin } = useNotes();
 
-  // Enhanced filtering
-  const filteredItems = notes.filter(note => {
-    const matchesSearch = note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (note.content && note.content.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    if (!matchesSearch) return false;
-    
-    switch (filterType) {
-      case "tasks":
-        return note.content?.includes("task:") || note.title.includes("☐") || note.title.includes("☑");
-      case "notes":
-        return !note.content?.includes("task:") && !note.title.includes("☐") && !note.title.includes("☑");
-      case "completed":
-        return note.title.includes("☑") || note.content?.includes("completed:true");
-      default:
-        return true;
-    }
-  });
+  const metrics = getProductivityMetrics();
 
-  const pinnedItems = filteredItems.filter(item => item.is_pinned);
-  const unpinnedItems = filteredItems.filter(item => !item.is_pinned);
-
-  const handleCreateItem = () => {
-    if (newItem.title.trim() || newItem.content.trim()) {
-      const taskPrefix = newItemType === "task" ? "☐ " : "";
-      const taskMetadata = newItemType === "task" ? 
-        `\n\ntask:true\npriority:${newItem.priority}\ncompleted:false` : "";
-      
-      createNote({
-        title: taskPrefix + (newItem.title || "Untitled"),
-        content: newItem.content + taskMetadata,
-        color: newItemType === "task" ? "bg-blue-50 border-l-4 border-l-blue-400" : "bg-yellow-50"
+  const handleCreateTask = () => {
+    if (newTask.title.trim()) {
+      createTask({
+        ...newTask,
+        dueDate: newTask.dueDate?.toISOString() || null
       });
-      
-      setNewItem({ 
-        title: "", 
-        content: "", 
-        isTask: false, 
-        isCompleted: false,
-        priority: "medium",
+      setNewTask({
+        title: '',
+        content: '',
+        priority: 'medium',
+        dueDate: null,
+        category: 'General',
         tags: []
       });
-      setShowNewItem(false);
+      setShowNewTask(false);
     }
   };
 
-  const toggleTaskComplete = (item: any) => {
-    const isCompleted = item.title.includes("☑");
-    const newTitle = isCompleted 
-      ? item.title.replace("☑", "☐")
-      : item.title.replace("☐", "☑");
-    
-    const newContent = item.content?.replace(
-      /completed:(true|false)/,
-      `completed:${!isCompleted}`
-    ) || "";
-
-    updateNote({
-      id: item.id,
-      updates: { 
-        title: newTitle,
-        content: newContent,
-        color: isCompleted ? "bg-blue-50 border-l-4 border-l-blue-400" : "bg-green-50 border-l-4 border-l-green-400"
-      }
-    });
-  };
-
-  if (isLoading) {
-    return (
-      <div className={cn("flex flex-col h-full", className)} role="main" aria-label="Tasks and Notes">
-        <div className="p-6 border-b border-white/10">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-semibold text-primary">Tasks & Notes</h1>
-            <Button aria-label="Create new item">
-              <Plus className="h-4 w-4 mr-2" />
-              New
-            </Button>
-          </div>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center" role="status" aria-live="polite">
-            <div className="loading-spinner mx-auto mb-4" aria-hidden="true"></div>
-            <p className="text-secondary">Loading your tasks and notes...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className={cn("flex flex-col h-full", className)} role="main" aria-label="Tasks and Notes">
-      {/* Enhanced Header with better contrast */}
-      <header className="p-6 border-b border-white/10 glass">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-2xl font-semibold text-primary">Tasks & Notes</h1>
-            <p className="text-sm text-secondary mt-1">Organize your thoughts and track your progress</p>
-          </div>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button className="btn-primary" aria-label="Create new item">
-                <Plus className="h-4 w-4 mr-2" />
-                New
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="glass border border-white/20">
-              <DropdownMenuItem 
-                onClick={() => {
-                  setNewItemType("note");
-                  setShowNewItem(true);
-                }}
-                className="text-primary hover:bg-white/10"
-              >
-                <Edit3 className="h-4 w-4 mr-2" />
-                New Note
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => {
-                  setNewItemType("task");
-                  setShowNewItem(true);
-                }}
-                className="text-primary hover:bg-white/10"
-              >
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-                New Task
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        {/* Enhanced Search and Filter */}
-        <div className="space-y-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-secondary" aria-hidden="true" />
-            <Input
-              placeholder="Search tasks and notes..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 glass border-white/20 text-primary placeholder:text-secondary focus:border-white/40"
-              aria-label="Search tasks and notes"
-            />
-          </div>
-          
-          <div className="flex gap-2 flex-wrap">
-            {["all", "tasks", "notes", "completed"].map((filter) => (
-              <Button
-                key={filter}
-                variant={filterType === filter ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setFilterType(filter as any)}
-                className={cn(
-                  "capitalize transition-all duration-200",
-                  filterType === filter 
-                    ? "btn-primary" 
-                    : "text-secondary hover:text-primary hover:bg-white/10"
-                )}
-                aria-pressed={filterType === filter}
-                aria-label={`Filter by ${filter}`}
-              >
-                <Filter className="h-3 w-3 mr-1" aria-hidden="true" />
-                {filter}
-              </Button>
-            ))}
-          </div>
-        </div>
-      </header>
-
-      {/* New Item Form with better accessibility */}
-      {showNewItem && (
-        <div className="p-6 border-b border-white/10 glass-card" role="dialog" aria-labelledby="new-item-title">
-          <h2 id="new-item-title" className="text-lg font-medium text-primary mb-3">
-            Create New {newItemType === "task" ? "Task" : "Note"}
-          </h2>
-          <div className="space-y-3">
-            <Input
-              placeholder={`${newItemType === "task" ? "Task" : "Note"} title...`}
-              value={newItem.title}
-              onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
-              className="glass border-white/20 text-primary placeholder:text-secondary"
-              aria-label={`${newItemType === "task" ? "Task" : "Note"} title`}
-            />
-            <Textarea
-              placeholder={`Add ${newItemType === "task" ? "task details" : "note content"}...`}
-              value={newItem.content}
-              onChange={(e) => setNewItem({ ...newItem, content: e.target.value })}
-              rows={4}
-              className="glass border-white/20 text-primary placeholder:text-secondary"
-              aria-label={`${newItemType === "task" ? "Task" : "Note"} content`}
-            />
-            {newItemType === "task" && (
-              <div className="flex gap-2">
-                <Badge 
-                  variant="outline" 
-                  className="cursor-pointer border-white/20 text-secondary hover:border-white/40"
-                  onClick={() => setNewItem({ ...newItem, priority: newItem.priority === "low" ? "medium" : newItem.priority === "medium" ? "high" : "low" })}
-                >
-                  Priority: {newItem.priority}
-                </Badge>
-              </div>
-            )}
-            <div className="flex gap-2">
-              <Button onClick={handleCreateItem} className="btn-primary">
-                Create {newItemType === "task" ? "Task" : "Note"}
-              </Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => setShowNewItem(false)}
-                className="text-secondary hover:text-primary hover:bg-white/10"
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Enhanced Items Grid */}
-      <main className="flex-1 p-6 overflow-y-auto">
-        {/* Pinned Items */}
-        {pinnedItems.length > 0 && (
-          <section className="mb-8" aria-labelledby="pinned-section">
-            <h2 id="pinned-section" className="text-sm font-semibold text-secondary uppercase tracking-wider mb-4 flex items-center gap-2">
-              <Star className="h-4 w-4 text-yellow-400 fill-current" aria-hidden="true" />
-              Pinned Items
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {pinnedItems.map((item) => (
-                <ItemCard 
-                  key={item.id} 
-                  item={item} 
-                  onTogglePin={togglePin}
-                  onToggleComplete={toggleTaskComplete}
-                  onDelete={deleteNote}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Other Items */}
-        {unpinnedItems.length > 0 && (
-          <section aria-labelledby="other-section">
-            <h2 id="other-section" className="text-sm font-semibold text-secondary uppercase tracking-wider mb-4">
-              {filterType === "all" ? "All Items" : 
-               filterType === "tasks" ? "Tasks" :
-               filterType === "notes" ? "Notes" : "Completed Items"}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {unpinnedItems.map((item) => (
-                <ItemCard 
-                  key={item.id} 
-                  item={item} 
-                  onTogglePin={togglePin}
-                  onToggleComplete={toggleTaskComplete}
-                  onDelete={deleteNote}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {filteredItems.length === 0 && (
-          <div className="text-center py-12" role="status">
-            <div className="glass-card p-8 max-w-md mx-auto">
-              <p className="text-primary text-lg mb-2">No items found</p>
-              <p className="text-secondary mb-4">
-                {searchTerm ? "Try adjusting your search terms" : "Create your first task or note to get started!"}
-              </p>
-              <Button 
-                onClick={() => setShowNewItem(true)} 
-                className="btn-primary"
-                aria-label="Create your first item"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Get Started
-              </Button>
-            </div>
-          </div>
-        )}
-      </main>
-    </div>
-  );
-};
-
-interface ItemCardProps {
-  item: {
-    id: string;
-    title: string;
-    content: string | null;
-    color: string;
-    is_pinned: boolean;
-    created_at: string;
-  };
-  onTogglePin: (args: { id: string; isPinned: boolean }) => void;
-  onToggleComplete: (item: any) => void;
-  onDelete: (id: string) => void;
-}
-
-const ItemCard = ({ item, onTogglePin, onToggleComplete, onDelete }: ItemCardProps) => {
-  const isTask = item.title.includes("☐") || item.title.includes("☑");
-  const isCompleted = item.title.includes("☑");
-  const priority = item.content?.match(/priority:(\w+)/)?.[1] || "medium";
-  
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+  const toggleTaskComplete = (taskId: string, isCompleted: boolean) => {
+    updateTask(taskId, { isCompleted: !isCompleted });
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "high": return "text-red-400 border-red-400/30";
-      case "low": return "text-green-400 border-green-400/30";
-      default: return "text-yellow-400 border-yellow-400/30";
+      case 'high': return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
+      case 'low': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
+      default: return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
     }
   };
 
+  const categories = ['General', 'Business', 'Development', 'Personal', 'Marketing'];
+
   return (
-    <article 
-      className={cn(
-        "glass-card p-4 transition-all duration-300 hover:shadow-xl group",
-        isCompleted && "opacity-75",
-        item.color
-      )}
-      role="article"
-      aria-labelledby={`item-title-${item.id}`}
-    >
-      <header className="flex items-start justify-between mb-3">
-        <div className="flex items-start gap-2 flex-1 min-w-0">
-          {isTask && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleComplete(item);
-              }}
-              className="mt-1 transition-colors duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 rounded"
-              aria-label={isCompleted ? "Mark task as incomplete" : "Mark task as complete"}
-            >
-              {isCompleted ? (
-                <CheckCircle2 className="h-5 w-5 text-green-400" />
-              ) : (
-                <Circle className="h-5 w-5 text-secondary hover:text-primary" />
-              )}
-            </button>
-          )}
-          <h3 
-            id={`item-title-${item.id}`}
-            className={cn(
-              "font-medium text-primary line-clamp-2 break-words",
-              isCompleted && "line-through text-secondary"
-            )}
-          >
-            {item.title.replace(/^[☐☑]\s*/, "")}
-          </h3>
+    <div className="flex flex-col h-full bg-background">
+      {/* Header with metrics */}
+      <div className="p-6 border-b border-border bg-background/95 backdrop-blur-xl">
+        {/* Productivity Metrics */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-card p-4 rounded-lg border border-border">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-blue-500" />
+              <span className="text-sm font-medium text-muted-foreground">Completion Rate</span>
+            </div>
+            <div className="text-2xl font-bold text-foreground">{metrics.completionRate}%</div>
+          </div>
+          <div className="bg-card p-4 rounded-lg border border-border">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-green-500" />
+              <span className="text-sm font-medium text-muted-foreground">Completed</span>
+            </div>
+            <div className="text-2xl font-bold text-foreground">{metrics.completedTasks}</div>
+          </div>
+          <div className="bg-card p-4 rounded-lg border border-border">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-orange-500" />
+              <span className="text-sm font-medium text-muted-foreground">Pending</span>
+            </div>
+            <div className="text-2xl font-bold text-foreground">{metrics.pendingTasks}</div>
+          </div>
+          <div className="bg-card p-4 rounded-lg border border-border">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-red-500" />
+              <span className="text-sm font-medium text-muted-foreground">Overdue</span>
+            </div>
+            <div className="text-2xl font-bold text-foreground">{metrics.overdueTasks}</div>
+          </div>
         </div>
-        
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-white/10"
-              aria-label="Item options"
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="glass border border-white/20">
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation();
-                onTogglePin({ id: item.id, isPinned: item.is_pinned });
-              }}
-              className="text-primary hover:bg-white/10"
-            >
-              <Star className={cn("h-4 w-4 mr-2", item.is_pinned && "fill-current text-yellow-400")} />
-              {item.is_pinned ? "Unpin" : "Pin"}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-white/10" />
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(item.id);
-              }}
-              className="text-red-400 hover:bg-red-400/10"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </header>
 
-      {item.content && (
-        <div className="mb-3">
-          <p className="text-sm text-secondary line-clamp-3 whitespace-pre-wrap break-words">
-            {item.content.replace(/\n\ntask:.*$/s, "")}
-          </p>
-        </div>
-      )}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">Tasks & Notes</h1>
+            <p className="text-sm text-muted-foreground">Manage your work efficiently</p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => exportTasks('json')}>
+                  <FileDown className="h-4 w-4 mr-2" />
+                  Export as JSON
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportTasks('csv')}>
+                  <FileDown className="h-4 w-4 mr-2" />
+                  Export as CSV
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-      <footer className="flex items-center justify-between text-xs">
-        <div className="flex items-center gap-2">
-          <time 
-            dateTime={item.created_at}
-            className="text-secondary"
-          >
-            {formatDate(item.created_at)}
-          </time>
-          {isTask && (
-            <Badge 
-              variant="outline" 
-              className={cn("text-xs", getPriorityColor(priority))}
-              aria-label={`Priority: ${priority}`}
-            >
-              {priority}
-            </Badge>
-          )}
+            <Dialog open={showNewTask} onOpenChange={setShowNewTask}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Task
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>Create New Task</DialogTitle>
+                  <DialogDescription>
+                    Add a new task with details and due date
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <Input
+                    placeholder="Task title..."
+                    value={newTask.title}
+                    onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                  />
+                  <Textarea
+                    placeholder="Task description..."
+                    value={newTask.content}
+                    onChange={(e) => setNewTask({ ...newTask, content: e.target.value })}
+                    rows={3}
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <Select value={newTask.priority} onValueChange={(value: any) => setNewTask({ ...newTask, priority: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Priority" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low Priority</SelectItem>
+                        <SelectItem value="medium">Medium Priority</SelectItem>
+                        <SelectItem value="high">High Priority</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={newTask.category} onValueChange={(value) => setNewTask({ ...newTask, category: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map(category => (
+                          <SelectItem key={category} value={category}>{category}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {newTask.dueDate ? format(newTask.dueDate, "PPP") : "Set due date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <CalendarComponent
+                        mode="single"
+                        selected={newTask.dueDate}
+                        onSelect={(date) => setNewTask({ ...newTask, dueDate: date })}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <div className="flex gap-2">
+                    <Button onClick={handleCreateTask} className="flex-1">
+                      Create Task
+                    </Button>
+                    <Button variant="outline" onClick={() => setShowNewTask(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
-        
-        <div className="flex items-center gap-1">
-          {isTask && (
-            <Tag className="h-3 w-3 text-blue-400" aria-label="Task" />
-          )}
-          {item.is_pinned && (
-            <Star className="h-3 w-3 text-yellow-400 fill-current" aria-label="Pinned" />
-          )}
+
+        {/* Filters and Search */}
+        <div className="space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search tasks..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          
+          <div className="flex gap-2 flex-wrap">
+            <Select value={filterCategory} onValueChange={setFilterCategory}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map(category => (
+                  <SelectItem key={category} value={category}>{category}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterPriority} onValueChange={setFilterPriority}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Priorities</SelectItem>
+                <SelectItem value="high">High Priority</SelectItem>
+                <SelectItem value="medium">Medium Priority</SelectItem>
+                <SelectItem value="low">Low Priority</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="dueDate">Due Date</SelectItem>
+                <SelectItem value="priority">Priority</SelectItem>
+                <SelectItem value="created">Created Date</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-      </footer>
-    </article>
+      </div>
+
+      {/* Tasks List */}
+      <div className="flex-1 p-6 overflow-y-auto">
+        {tasks.length > 0 ? (
+          <div className="space-y-4">
+            {tasks.map((task) => (
+              <div
+                key={task.id}
+                className={cn(
+                  "bg-card border border-border rounded-lg p-4 transition-all hover:shadow-md",
+                  task.isCompleted && "opacity-60"
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <button
+                    onClick={() => toggleTaskComplete(task.id, task.isCompleted)}
+                    className="mt-1 transition-colors hover:scale-110"
+                  >
+                    {task.isCompleted ? (
+                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <Circle className="h-5 w-5 text-muted-foreground hover:text-foreground" />
+                    )}
+                  </button>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between">
+                      <h3 className={cn(
+                        "font-medium text-foreground",
+                        task.isCompleted && "line-through text-muted-foreground"
+                      )}>
+                        {task.title}
+                      </h3>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <Edit3 className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Users className="h-4 w-4 mr-2" />
+                            Share
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            onClick={() => deleteTask(task.id)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    
+                    {task.content && (
+                      <p className="text-sm text-muted-foreground mt-1">{task.content}</p>
+                    )}
+                    
+                    <div className="flex items-center gap-2 mt-3 flex-wrap">
+                      <Badge className={getPriorityColor(task.priority)}>
+                        {task.priority} priority
+                      </Badge>
+                      
+                      <Badge variant="outline">
+                        {task.category}
+                      </Badge>
+                      
+                      {task.dueDate && (
+                        <Badge variant="outline" className="text-orange-600">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          {format(new Date(task.dueDate), "MMM dd")}
+                        </Badge>
+                      )}
+                      
+                      {task.tags.map(tag => (
+                        <Badge key={tag} variant="secondary">
+                          <Tag className="h-3 w-3 mr-1" />
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <div className="bg-card p-8 rounded-lg border border-border max-w-md mx-auto">
+              <CheckCircle2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">No tasks found</h3>
+              <p className="text-muted-foreground mb-4">
+                Create your first task to get started with productivity tracking
+              </p>
+              <Button onClick={() => setShowNewTask(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Task
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
