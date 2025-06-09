@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ModernSidebar } from "@/components/ModernSidebar";
 import { EmailList } from "@/components/EmailList";
 import { Calendar } from "@/components/Calendar";
-import { Notes } from "@/components/Notes";
+import { TaskNote } from "@/components/TaskNote";
 import { EmailView } from "@/components/EmailView";
 import { AIChatInterface } from "@/components/AIChatInterface";
 import { EnhancedDashboard } from "@/components/EnhancedDashboard";
@@ -78,7 +78,7 @@ const Index = () => {
       case "ai": return "AI Assistant";
       case "inbox": return "Inbox";
       case "calendar": return "Calendar";
-      case "notes": return "Notes";
+      case "notes": return "Tasks & Notes";
       case "auth-config": return "Auth Settings";
       default: return "Dashboard";
     }
@@ -99,7 +99,7 @@ const Index = () => {
       case "calendar":
         return <Calendar />;
       case "notes":
-        return <Notes />;
+        return <TaskNote />;
       case "auth-config":
         return (
           <div className="p-6 animate-fade-in">
@@ -114,9 +114,9 @@ const Index = () => {
   // Show loading state only for real auth, not demo mode
   if (loading && !isDemoMode) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-screen items-center justify-center" role="main" aria-live="polite">
         <div className="text-center animate-scale-in">
-          <div className="loading-spinner mx-auto mb-4"></div>
+          <div className="loading-spinner mx-auto mb-4" aria-hidden="true"></div>
           <p className="text-primary text-lg loading-dots">Loading</p>
         </div>
       </div>
@@ -144,12 +144,12 @@ const Index = () => {
                 <div className="flex items-center gap-3 mt-1">
                   {isDemoMode ? (
                     <div className="status-demo animate-bounce-subtle">
-                      <Sparkles className="h-3 w-3" />
+                      <Sparkles className="h-3 w-3" aria-hidden="true" />
                       <span className="hidden sm:inline">Demo Mode</span>
                     </div>
                   ) : (
                     <div className="status-auth">
-                      <Settings className="h-3 w-3" />
+                      <Settings className="h-3 w-3" aria-hidden="true" />
                       <span className="hidden sm:inline">Authenticated</span>
                     </div>
                   )}
@@ -163,7 +163,7 @@ const Index = () => {
                 "transition-all duration-200",
                 isOnline ? "status-online" : "status-offline"
               )}>
-                {isOnline ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
+                {isOnline ? <Wifi className="h-3 w-3" aria-hidden="true" /> : <WifiOff className="h-3 w-3" aria-hidden="true" />}
                 <span className="hidden sm:inline">{isOnline ? 'Online' : 'Offline'}</span>
                 <span className="sr-only">Connection status: {isOnline ? 'Connected' : 'Disconnected'}</span>
               </div>
@@ -204,7 +204,7 @@ const Index = () => {
           </header>
 
           {/* Main content with skip link for accessibility */}
-          <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-white px-4 py-2 rounded">
+          <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-white px-4 py-2 rounded z-50">
             Skip to main content
           </a>
           
