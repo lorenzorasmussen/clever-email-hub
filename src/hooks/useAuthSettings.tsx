@@ -1,55 +1,80 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import type { Tables } from '@/integrations/supabase/types';
 
-export interface AuthSetting {
-  id: string;
-  setting_name: string;
-  setting_value: any;
-  description: string;
-  created_at: string;
-  updated_at: string;
-}
-
-// Mock data until database types are updated
-const mockSettings: AuthSetting[] = [
-  {
-    id: '1',
-    setting_name: 'two_factor_auth',
-    setting_value: 'enabled',
-    description: 'Two-factor authentication',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-];
+export type AuthSetting = Tables<'auth_settings'>;
 
 export const useAuthSettings = () => {
-  const [settings, setSettings] = useState<AuthSetting[]>(mockSettings);
+  const { user } = useAuth();
+  const [settings, setSettings] = useState<AuthSetting[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const fetchSettings = async () => {
-    // Mock fetch - will be replaced when types are updated
-    return settings;
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('auth_settings')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      setSettings(data || []);
+    } catch (error) {
+      console.error('Error fetching auth settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch settings",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const updateSetting = async (settingName: string, value: any) => {
-    setSettings(prev => prev.map(setting => 
-      setting.setting_name === settingName 
-        ? { ...setting, setting_value: value, updated_at: new Date().toISOString() }
-        : setting
-    ));
-    
-    toast({
-      title: "Success",
-      description: "Setting updated successfully"
-    });
+  const updateSetting = async (settingName: string, value: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('auth_settings')
+        .upsert({
+          user_id: user.id,
+          setting_name: settingName,
+          setting_value: value,
+          description: `Setting for ${settingName}`
+        });
+
+      if (error) throw error;
+      
+      await fetchSettings();
+      toast({
+        title: "Success",
+        description: "Setting updated successfully"
+      });
+    } catch (error) {
+      console.error('Error updating setting:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update setting",
+        variant: "destructive"
+      });
+    }
   };
 
   const getSetting = (settingName: string) => {
     const setting = settings.find(s => s.setting_name === settingName);
     return setting?.setting_value;
   };
+
+  useEffect(() => {
+    fetchSettings();
+  }, [user]);
 
   return {
     settings,

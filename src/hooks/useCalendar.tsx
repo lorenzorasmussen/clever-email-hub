@@ -1,86 +1,148 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
 
-export interface CalendarEvent {
-  id: string;
-  title: string;
-  description: string | null;
-  start_time: string;
-  end_time: string;
-  event_type: 'meeting' | 'reminder' | 'event';
-  color: string;
-  user_id: string;
-  created_at: string;
-  updated_at: string;
-}
-
-// Mock data until database types are updated
-const mockEvents: CalendarEvent[] = [
-  {
-    id: '1',
-    title: 'Team Meeting',
-    description: 'Weekly team sync',
-    start_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    end_time: new Date(Date.now() + 25 * 60 * 60 * 1000).toISOString(),
-    event_type: 'meeting',
-    color: 'blue',
-    user_id: 'demo',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-];
+export type CalendarEvent = Tables<'calendar_events'>;
 
 export const useCalendar = () => {
   const { user } = useAuth();
-  const [events, setEvents] = useState<CalendarEvent[]>(mockEvents);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const createEvent = (eventData: Omit<CalendarEvent, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-    const newEvent: CalendarEvent = {
-      ...eventData,
-      id: Date.now().toString(),
-      user_id: user?.id || 'demo',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+  const fetchEvents = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('start_time', { ascending: true });
 
-    setEvents(prev => [...prev, newEvent]);
-    toast({
-      title: "Success",
-      description: "Event created successfully",
-    });
+      if (error) throw error;
+      setEvents(data || []);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      setError('Failed to fetch events');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const updateEvent = ({ id, updates }: { id: string; updates: Partial<CalendarEvent> }) => {
-    setEvents(prev => prev.map(event => 
-      event.id === id 
-        ? { ...event, ...updates, updated_at: new Date().toISOString() }
-        : event
-    ));
-    toast({
-      title: "Success",
-      description: "Event updated successfully",
-    });
+  const createEvent = async (eventData: {
+    title: string;
+    description?: string;
+    start_time: string;
+    end_time: string;
+    location?: string;
+    attendees?: string[];
+  }) => {
+    if (!user) return;
+
+    setIsCreating(true);
+    try {
+      const { error } = await supabase
+        .from('calendar_events')
+        .insert({
+          ...eventData,
+          user_id: user.id
+        });
+
+      if (error) throw error;
+      
+      await fetchEvents();
+      toast({
+        title: "Success",
+        description: "Event created successfully",
+      });
+    } catch (error) {
+      console.error('Error creating event:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create event",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCreating(false);
+    }
   };
 
-  const deleteEvent = (eventId: string) => {
-    setEvents(prev => prev.filter(event => event.id !== eventId));
-    toast({
-      title: "Success",
-      description: "Event deleted successfully",
-    });
+  const updateEvent = async ({ id, updates }: { id: string; updates: Partial<CalendarEvent> }) => {
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('calendar_events')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      await fetchEvents();
+      toast({
+        title: "Success",
+        description: "Event updated successfully",
+      });
+    } catch (error) {
+      console.error('Error updating event:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update event",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpdating(false);
+    }
   };
+
+  const deleteEvent = async (eventId: string) => {
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('calendar_events')
+        .delete()
+        .eq('id', eventId);
+
+      if (error) throw error;
+      
+      await fetchEvents();
+      toast({
+        title: "Success",
+        description: "Event deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete event",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEvents();
+  }, [user]);
 
   return {
     events,
-    isLoading: false,
-    error: null,
+    isLoading,
+    error,
     createEvent,
     updateEvent,
     deleteEvent,
-    isCreating: false,
-    isUpdating: false,
-    isDeleting: false,
+    isCreating,
+    isUpdating,
+    isDeleting,
   };
 };
