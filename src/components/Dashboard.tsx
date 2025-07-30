@@ -1,12 +1,27 @@
 
-import { useEmails } from "@/hooks/useEmails";
-import { useCalendar } from "@/hooks/useCalendar";
-import { useNotes } from "@/hooks/useNotes";
+import { useEmails, Email } from "@/hooks/useEmails";
+import { useCalendar, CalendarEvent } from "@/hooks/useCalendar";
+import { useNotes, Note } from "@/hooks/useNotes";
 import { DashboardStats } from "./dashboard/DashboardStats";
 import { RecentEmailsWidget } from "./dashboard/RecentEmailsWidget";
 import { UpcomingEventsWidget } from "./dashboard/UpcomingEventsWidget";
 import { RecentNotesWidget } from "./dashboard/RecentNotesWidget";
 import { QuickActionsWidget } from "./dashboard/QuickActionsWidget";
+
+// Extended types for dashboard widgets that expect specific interfaces
+interface ExtendedEmail extends Email {
+  priority: 'high' | 'medium' | 'low';
+}
+
+interface ExtendedNote extends Note {
+  color: string;
+  is_pinned: boolean;
+}
+
+interface ExtendedCalendarEvent extends CalendarEvent {
+  event_type: string;
+  color: string;
+}
 
 export const Dashboard = () => {
   const { emails, isLoading: emailsLoading } = useEmails();
@@ -21,26 +36,40 @@ export const Dashboard = () => {
     const today = new Date();
     return eventDate.toDateString() === today.toDateString();
   }).length;
-  const pinnedNotes = notes.filter(note => note.is_pinned).length;
+  const pinnedNotes = 0; // Since notes table doesn't have is_pinned yet
 
-  const getUpcomingEvents = () => {
+  const getUpcomingEvents = (): ExtendedCalendarEvent[] => {
     const now = new Date();
     return events
       .filter(event => new Date(event.start_time) > now)
       .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
-      .slice(0, 3);
+      .slice(0, 3)
+      .map(event => ({
+        ...event,
+        event_type: event.event_type || 'event',
+        color: event.color || 'blue'
+      }));
   };
 
-  const getRecentEmails = () => {
+  const getRecentEmails = (): ExtendedEmail[] => {
     return emails
-      .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-      .slice(0, 3);
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 3)
+      .map(email => ({
+        ...email,
+        priority: (email.priority || 'medium') as 'high' | 'medium' | 'low'
+      }));
   };
 
-  const getRecentNotes = () => {
+  const getRecentNotes = (): ExtendedNote[] => {
     return notes
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      .slice(0, 3);
+      .slice(0, 3)
+      .map(note => ({
+        ...note,
+        color: 'bg-yellow-100',
+        is_pinned: false
+      }));
   };
 
   if (emailsLoading || eventsLoading || notesLoading) {

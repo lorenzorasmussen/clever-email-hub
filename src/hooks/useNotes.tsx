@@ -1,94 +1,162 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import type { Tables } from '@/integrations/supabase/types';
 
-export interface Note {
-  id: string;
-  title: string;
-  content: string | null;
-  color: string;
-  is_pinned: boolean;
-  user_id: string;
-  created_at: string;
-  updated_at: string;
-}
-
-// Mock data until database types are updated
-const mockNotes: Note[] = [
-  {
-    id: '1',
-    title: 'Welcome Note',
-    content: 'This is your first note. Start creating!',
-    color: 'bg-yellow-100',
-    is_pinned: false,
-    user_id: 'demo',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-];
+export type Note = Tables<'notes'>;
 
 export const useNotes = () => {
   const { user } = useAuth();
-  const [notes, setNotes] = useState<Note[]>(mockNotes);
+  const { toast } = useToast();
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const createNote = (noteData: { title: string; content: string; color?: string }) => {
-    const newNote: Note = {
-      id: Date.now().toString(),
-      title: noteData.title,
-      content: noteData.content,
-      color: noteData.color || 'bg-yellow-100',
-      is_pinned: false,
-      user_id: user?.id || 'demo',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+  const fetchNotes = async () => {
+    if (!user) {
+      setNotes([]);
+      return;
+    }
 
-    setNotes(prev => [newNote, ...prev]);
-    toast({
-      title: "Success",
-      description: "Note created successfully",
-    });
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false });
+
+      if (error) throw error;
+      
+      setNotes(data || []);
+    } catch (err) {
+      console.error('Error fetching notes:', err);
+      setError('Failed to fetch notes');
+      toast({
+        title: "Error",
+        description: "Failed to fetch notes",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const updateNote = ({ id, updates }: { id: string; updates: Partial<Note> }) => {
-    setNotes(prev => prev.map(note => 
-      note.id === id 
-        ? { ...note, ...updates, updated_at: new Date().toISOString() }
-        : note
-    ));
-    toast({
-      title: "Success",
-      description: "Note updated successfully",
-    });
+  const createNote = async (noteData: { title: string; content?: string; tags?: string[] }) => {
+    if (!user) return null;
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('notes')
+        .insert({
+          ...noteData,
+          user_id: user.id,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setNotes(prev => [data, ...prev]);
+      toast({
+        title: "Success",
+        description: "Note created successfully",
+      });
+      
+      return data;
+    } catch (err) {
+      console.error('Error creating note:', err);
+      toast({
+        title: "Error",
+        description: "Failed to create note",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const deleteNote = (noteId: string) => {
-    setNotes(prev => prev.filter(note => note.id !== noteId));
-    toast({
-      title: "Success",
-      description: "Note deleted successfully",
-    });
+  const updateNote = async (id: string, updates: Partial<Note>) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('notes')
+        .update(updates)
+        .eq('id', id)
+        .eq('user_id', user?.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setNotes(prev => prev.map(note => 
+        note.id === id ? data : note
+      ));
+      
+      toast({
+        title: "Success",
+        description: "Note updated successfully",
+      });
+      
+      return data;
+    } catch (err) {
+      console.error('Error updating note:', err);
+      toast({
+        title: "Error",
+        description: "Failed to update note",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const togglePin = ({ id, isPinned }: { id: string; isPinned: boolean }) => {
-    setNotes(prev => prev.map(note => 
-      note.id === id 
-        ? { ...note, is_pinned: !isPinned, updated_at: new Date().toISOString() }
-        : note
-    ));
+  const deleteNote = async (id: string) => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      setNotes(prev => prev.filter(note => note.id !== id));
+      toast({
+        title: "Success",
+        description: "Note deleted successfully",
+      });
+    } catch (err) {
+      console.error('Error deleting note:', err);
+      toast({
+        title: "Error",
+        description: "Failed to delete note",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchNotes();
+  }, [user]);
 
   return {
     notes,
-    isLoading: false,
-    error: null,
+    isLoading,
+    error,
     createNote,
     updateNote,
     deleteNote,
-    togglePin,
-    isCreating: false,
-    isUpdating: false,
-    isDeleting: false,
+    refetch: fetchNotes,
   };
 };

@@ -62,9 +62,11 @@ export type Database = {
       calendar_events: {
         Row: {
           attendees: string[] | null
+          color: string | null
           created_at: string
           description: string | null
           end_time: string
+          event_type: string | null
           id: string
           location: string | null
           start_time: string
@@ -74,9 +76,11 @@ export type Database = {
         }
         Insert: {
           attendees?: string[] | null
+          color?: string | null
           created_at?: string
           description?: string | null
           end_time: string
+          event_type?: string | null
           id?: string
           location?: string | null
           start_time: string
@@ -86,9 +90,11 @@ export type Database = {
         }
         Update: {
           attendees?: string[] | null
+          color?: string | null
           created_at?: string
           description?: string | null
           end_time?: string
+          event_type?: string | null
           id?: string
           location?: string | null
           start_time?: string
@@ -100,41 +106,56 @@ export type Database = {
       }
       emails: {
         Row: {
+          ai_summary: string | null
+          ai_tags: string[] | null
           content: string | null
           created_at: string
           id: string
           is_read: boolean | null
           is_starred: boolean | null
+          preview: string | null
+          priority: string | null
           recipient: string
           sender: string
           subject: string
           thread_id: string | null
+          time: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          ai_summary?: string | null
+          ai_tags?: string[] | null
           content?: string | null
           created_at?: string
           id?: string
           is_read?: boolean | null
           is_starred?: boolean | null
+          preview?: string | null
+          priority?: string | null
           recipient: string
           sender: string
           subject: string
           thread_id?: string | null
+          time?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          ai_summary?: string | null
+          ai_tags?: string[] | null
           content?: string | null
           created_at?: string
           id?: string
           is_read?: boolean | null
           is_starred?: boolean | null
+          preview?: string | null
+          priority?: string | null
           recipient?: string
           sender?: string
           subject?: string
           thread_id?: string | null
+          time?: string | null
           updated_at?: string
           user_id?: string
         }

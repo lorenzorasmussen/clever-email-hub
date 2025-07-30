@@ -10,22 +10,22 @@ export const Notes = () => {
   const [showNewNote, setShowNewNote] = useState(false);
   const [newNote, setNewNote] = useState({ title: "", content: "" });
   
-  const { notes, isLoading, createNote, togglePin } = useNotes();
+  const { notes, isLoading, createNote } = useNotes();
 
   const filteredNotes = notes.filter(note =>
     note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (note.content && note.content.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const pinnedNotes = filteredNotes.filter(note => note.is_pinned);
-  const unpinnedNotes = filteredNotes.filter(note => !note.is_pinned);
+  // Since we don't have is_pinned in the database yet, we'll use placeholder values
+  const pinnedNotes: any[] = []; // No pinned notes for now
+  const unpinnedNotes = filteredNotes;
 
   const handleCreateNote = () => {
     if (newNote.title.trim() || newNote.content.trim()) {
       createNote({
         title: newNote.title || "Untitled",
-        content: newNote.content,
-        color: "bg-yellow-100"
+        content: newNote.content
       });
       setNewNote({ title: "", content: "" });
       setShowNewNote(false);
@@ -117,7 +117,7 @@ export const Notes = () => {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {pinnedNotes.map((note) => (
-                <NoteCard key={note.id} note={note} onTogglePin={togglePin} />
+                <NoteCard key={note.id} note={note} />
               ))}
             </div>
           </div>
@@ -131,7 +131,7 @@ export const Notes = () => {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {unpinnedNotes.map((note) => (
-                <NoteCard key={note.id} note={note} onTogglePin={togglePin} />
+                <NoteCard key={note.id} note={note} />
               ))}
             </div>
           </div>
@@ -153,32 +153,25 @@ interface NoteCardProps {
     id: string;
     title: string;
     content: string | null;
-    color: string;
-    is_pinned: boolean;
     created_at: string;
   };
-  onTogglePin: (args: { id: string; isPinned: boolean }) => void;
 }
 
-const NoteCard = ({ note, onTogglePin }: NoteCardProps) => {
+const NoteCard = ({ note }: NoteCardProps) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
   };
 
   return (
-    <div className={`${note.color} p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer group`}>
+    <div className="bg-yellow-100 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-medium text-gray-900 line-clamp-2">{note.title}</h3>
         <Button
           variant="ghost"
           size="sm"
           className="opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={(e) => {
-            e.stopPropagation();
-            onTogglePin({ id: note.id, isPinned: note.is_pinned });
-          }}
         >
-          <Pin className={`h-4 w-4 ${note.is_pinned ? "fill-current" : ""}`} />
+          <Pin className="h-4 w-4" />
         </Button>
       </div>
       {note.content && (

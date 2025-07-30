@@ -14,7 +14,7 @@ export const AuthConfigPanel = () => {
   const [tempValues, setTempValues] = useState<Record<string, any>>({});
 
   const handleToggle = async (settingName: string, checked: boolean) => {
-    await updateSetting(settingName, checked);
+    await updateSetting(settingName, checked.toString());
   };
 
   const handleNumberChange = (settingName: string, value: string) => {
@@ -24,7 +24,7 @@ export const AuthConfigPanel = () => {
   const handleNumberSubmit = async (settingName: string) => {
     const value = tempValues[settingName];
     if (value !== undefined) {
-      await updateSetting(settingName, parseInt(value));
+      await updateSetting(settingName, value.toString());
       setTempValues(prev => ({ ...prev, [settingName]: undefined }));
     }
   };
@@ -72,7 +72,7 @@ export const AuthConfigPanel = () => {
               </p>
             </div>
             <Switch
-              checked={getSetting('email_confirmation_required') === true}
+              checked={getSetting('email_confirmation_required') === 'true'}
               onCheckedChange={(checked) => handleToggle('email_confirmation_required', checked)}
             />
           </div>
@@ -89,7 +89,7 @@ export const AuthConfigPanel = () => {
               </p>
             </div>
             <Switch
-              checked={getSetting('google_auth_enabled') === true}
+              checked={getSetting('google_auth_enabled') === 'true'}
               onCheckedChange={(checked) => handleToggle('google_auth_enabled', checked)}
             />
           </div>
