@@ -24,7 +24,7 @@ const Index = () => {
   const [currentView, setCurrentView] = useState<ViewType>("dashboard");
   const [selectedEmail, setSelectedEmail] = useState<any>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const { user, loading, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   // Monitor online status
@@ -41,31 +41,7 @@ const Index = () => {
     };
   }, []);
 
-  // For demo mode, we'll use a mock user if no real user is logged in
-  const demoUser = {
-    email: "demo@gmail-ai.com",
-    user_metadata: {
-      full_name: "Demo User",
-      avatar_url: null
-    }
-  };
-
-  const currentUser = user || demoUser;
-  const isDemoMode = !user;
-
-  // Redirect to auth if not logged in and not in demo mode
-  useEffect(() => {
-    if (!loading && !user && !isDemoMode) {
-      navigate('/auth');
-    }
-  }, [user, loading, navigate, isDemoMode]);
-
   const handleSignOut = async () => {
-    if (isDemoMode) {
-      navigate('/auth');
-      return;
-    }
-    
     try {
       await signOut();
       navigate('/auth');
@@ -113,13 +89,13 @@ const Index = () => {
     }
   };
 
-  // Show loading state only for real auth, not demo mode
-  if (loading && !isDemoMode) {
+  // Show loading state
+  if (!user) {
     return (
       <ThemeProvider>
-        <div className="flex h-screen items-center justify-center bg-background" role="main" aria-live="polite">
+        <div className="flex h-screen items-center justify-center bg-background">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" aria-hidden="true"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-foreground text-lg">Loading...</p>
           </div>
         </div>
@@ -134,7 +110,7 @@ const Index = () => {
           <EnhancedSidebar 
             currentView={currentView} 
             onViewChange={setCurrentView}
-            showAuthConfig={!isDemoMode}
+            showAuthConfig={true}
           />
           
           <div className="flex-1 flex flex-col min-w-0 bg-background">
@@ -147,17 +123,10 @@ const Index = () => {
                     {getPageTitle()}
                   </h1>
                   <div className="flex items-center gap-3 mt-1">
-                    {isDemoMode ? (
-                      <div className="flex items-center gap-2 px-3 py-1 bg-purple-100 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-full text-sm font-medium">
-                        <Sparkles className="h-3 w-3 text-purple-600 dark:text-purple-400" aria-hidden="true" />
-                        <span className="hidden sm:inline text-purple-700 dark:text-purple-300">Demo Mode</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-full text-sm font-medium">
-                        <Settings className="h-3 w-3 text-green-600 dark:text-green-400" aria-hidden="true" />
-                        <span className="hidden sm:inline text-green-700 dark:text-green-300">Authenticated</span>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-full text-sm font-medium">
+                      <Settings className="h-3 w-3 text-green-600 dark:text-green-400" aria-hidden="true" />
+                      <span className="hidden sm:inline text-green-700 dark:text-green-300">Authenticated</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -175,37 +144,37 @@ const Index = () => {
                 </div>
 
                 {/* User profile section */}
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8 ring-2 ring-border">
-                    <AvatarImage 
-                      src={currentUser.user_metadata?.avatar_url} 
-                      alt={`${currentUser.user_metadata?.full_name || currentUser.email}'s avatar`}
-                    />
-                    <AvatarFallback className="bg-primary text-primary-foreground">
-                      <User className="h-4 w-4" />
-                    </AvatarFallback>
-                  </Avatar>
-                  
-                  <div className="hidden sm:block">
-                    <div className="text-sm font-medium text-foreground">
-                      {currentUser.user_metadata?.full_name || currentUser.email}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {isDemoMode ? "Demo User" : "Authenticated"}
-                    </div>
-                  </div>
-                </div>
+                 <div className="flex items-center gap-3">
+                   <Avatar className="h-8 w-8 ring-2 ring-border">
+                     <AvatarImage 
+                       src={user.user_metadata?.avatar_url} 
+                       alt={`${user.user_metadata?.full_name || user.email}'s avatar`}
+                     />
+                     <AvatarFallback className="bg-primary text-primary-foreground">
+                       <User className="h-4 w-4" />
+                     </AvatarFallback>
+                   </Avatar>
+                   
+                   <div className="hidden sm:block">
+                     <div className="text-sm font-medium text-foreground">
+                       {user.user_metadata?.full_name || user.email}
+                     </div>
+                     <div className="text-xs text-muted-foreground">
+                       Authenticated
+                     </div>
+                   </div>
+                 </div>
                 
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleSignOut}
-                  className="text-muted-foreground hover:text-foreground"
-                  aria-label={isDemoMode ? "Go to login page" : "Sign out of account"}
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  <span className="hidden sm:inline">{isDemoMode ? "Login" : "Sign Out"}</span>
-                </Button>
+                 <Button 
+                   variant="ghost" 
+                   size="sm" 
+                   onClick={handleSignOut}
+                   className="text-muted-foreground hover:text-foreground"
+                   aria-label="Sign out of account"
+                 >
+                   <LogOut className="h-4 w-4 mr-2" />
+                   <span className="hidden sm:inline">Sign Out</span>
+                 </Button>
               </div>
             </header>
 
