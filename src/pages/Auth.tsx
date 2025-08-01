@@ -101,20 +101,20 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center mobile-padding">
-      <div className="w-full max-w-md space-y-6 animate-fade-in">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md space-y-6">
         {/* Demo Mode Card */}
-        <Card className="border-2 border-purple-300/30 glass-card animate-scale-in">
+        <Card className="border-2 border-purple-500/30 bg-card">
           <CardHeader className="text-center pb-4">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <div className="p-2 glass rounded-xl">
-                <Sparkles className="h-6 w-6 text-purple-300 animate-bounce-subtle" />
+              <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-xl">
+                <Sparkles className="h-6 w-6 text-purple-600 dark:text-purple-400" />
               </div>
-              <CardTitle className="text-xl font-bold text-white">
+              <CardTitle className="text-xl font-bold text-card-foreground">
                 Try Demo Mode
               </CardTitle>
             </div>
-            <CardDescription className="text-white/70">
+            <CardDescription className="text-muted-foreground">
               Explore Gmail AI instantly without signing up
             </CardDescription>
           </CardHeader>
@@ -122,7 +122,7 @@ const Auth = () => {
           <CardContent>
             <Button
               onClick={handleDemoLogin}
-              className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-medium mobile-button"
+              className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-medium"
               size="lg"
             >
               <Sparkles className="h-4 w-4 mr-2" />
@@ -133,12 +133,12 @@ const Auth = () => {
         </Card>
 
         {/* Authentication Card */}
-        <Card className="glass-card animate-slide-up" style={{ animationDelay: '100ms' }}>
+        <Card className="bg-card border-border">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-white">
+            <CardTitle className="text-2xl font-bold text-card-foreground">
               {isSignUp ? 'Create Account' : 'Welcome Back'}
             </CardTitle>
-            <CardDescription className="text-white/70">
+            <CardDescription className="text-muted-foreground">
               {isSignUp 
                 ? 'Sign up for full access to Gmail AI with secure authentication' 
                 : 'Sign in to your Gmail AI account with Supabase authentication'
@@ -151,9 +151,8 @@ const Auth = () => {
             <Button
               onClick={handleGoogleSignIn}
               disabled={isLoading}
-              className="w-full btn-secondary mobile-button"
+              className="w-full"
               variant="outline"
-              loading={isLoading}
             >
               <Chrome className="h-4 w-4 mr-2" />
               Continue with Google
@@ -161,54 +160,54 @@ const Auth = () => {
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-white/20" />
+                <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="glass px-2 text-white/60">Or continue with email</span>
+                <span className="bg-card px-2 text-muted-foreground">Or continue with email</span>
               </div>
             </div>
 
             {/* Email/Password Form */}
             <form onSubmit={handleEmailAuth} className="space-y-4">
               {isSignUp && (
-                <div className="relative animate-fade-in">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-white/60" />
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="text"
                     placeholder="Full name"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="pl-10 glass border-white/20 text-white placeholder:text-white/60 mobile-button"
+                    className="pl-10"
                   />
                 </div>
               )}
               
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-white/60" />
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="email"
                   placeholder="Email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 glass border-white/20 text-white placeholder:text-white/60 mobile-button"
+                  className="pl-10"
                   required
                 />
               </div>
               
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-white/60" />
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-10 glass border-white/20 text-white placeholder:text-white/60 mobile-button"
+                  className="pl-10 pr-10"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-white/60 hover:text-white transition-colors"
+                  className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -216,9 +215,8 @@ const Auth = () => {
 
               <Button 
                 type="submit" 
-                className="w-full mobile-button" 
+                className="w-full" 
                 disabled={isLoading}
-                loading={isLoading}
               >
                 {isSignUp ? 'Sign Up' : 'Sign In'}
               </Button>
@@ -228,7 +226,7 @@ const Auth = () => {
               <button
                 type="button"
                 onClick={() => setIsSignUp(!isSignUp)}
-                className="text-sm text-blue-300 hover:text-blue-200 underline transition-colors"
+                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 underline transition-colors"
               >
                 {isSignUp 
                   ? 'Already have an account? Sign in' 
@@ -240,14 +238,14 @@ const Auth = () => {
         </Card>
 
         {/* Security Notice */}
-        <Card className="border-green-300/30 glass-card animate-fade-in" style={{ animationDelay: '200ms' }}>
+        <Card className="border-green-500/30 bg-card">
           <CardContent className="pt-6">
-            <div className="text-center text-sm text-green-200">
+            <div className="text-center text-sm text-green-600 dark:text-green-400">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                 🔒 Secured by Supabase Authentication
               </div>
-              Your data is protected with Row Level Security
+              <span className="text-muted-foreground">Your data is protected with Row Level Security</span>
             </div>
           </CardContent>
         </Card>
