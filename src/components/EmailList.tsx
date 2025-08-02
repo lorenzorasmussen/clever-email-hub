@@ -55,11 +55,11 @@ export const EmailList = ({ onEmailSelect }: EmailListProps) => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full bg-white">
-        <div className="p-4 border-b border-gray-200">
+      <div className="flex flex-col h-full bg-background">
+        <div className="p-4 border-b border-border">
           <div className="flex items-center gap-4 mb-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search emails..."
                 value={searchTerm}
@@ -75,8 +75,8 @@ export const EmailList = ({ onEmailSelect }: EmailListProps) => {
         </div>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading emails...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading emails...</p>
           </div>
         </div>
       </div>
@@ -84,12 +84,12 @@ export const EmailList = ({ onEmailSelect }: EmailListProps) => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-background">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-border">
         <div className="flex items-center gap-4 mb-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search emails..."
               value={searchTerm}
@@ -105,8 +105,8 @@ export const EmailList = ({ onEmailSelect }: EmailListProps) => {
 
         {/* Action Bar */}
         {selectedEmails.length > 0 && (
-          <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg">
-            <span className="text-sm text-blue-700">
+          <div className="flex items-center gap-2 p-2 bg-accent rounded-lg">
+            <span className="text-sm text-accent-foreground">
               {selectedEmails.length} selected
             </span>
             <div className="flex gap-1 ml-auto">
@@ -129,16 +129,16 @@ export const EmailList = ({ onEmailSelect }: EmailListProps) => {
         {filteredEmails.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <p className="text-gray-500">No emails found</p>
-              <p className="text-sm text-gray-400">Your emails will appear here once you receive them</p>
+              <p className="text-muted-foreground">No emails found</p>
+              <p className="text-sm text-muted-foreground opacity-70">Your emails will appear here once you receive them</p>
             </div>
           </div>
         ) : (
           filteredEmails.map((email) => (
             <div
               key={email.id}
-              className={`border-b border-gray-100 p-4 cursor-pointer transition-colors hover:bg-gray-50 ${
-                !email.is_read ? "bg-blue-50" : ""
+              className={`border-b border-border p-4 cursor-pointer transition-colors hover:bg-accent/50 ${
+                !email.is_read ? "bg-accent/20" : ""
               }`}
               onClick={() => handleEmailClick(email)}
             >
@@ -155,28 +155,28 @@ export const EmailList = ({ onEmailSelect }: EmailListProps) => {
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className={`font-medium text-sm ${!email.is_read ? "text-gray-900" : "text-gray-700"}`}>
+                    <span className={`font-medium text-sm ${!email.is_read ? "text-foreground" : "text-muted-foreground"}`}>
                       {email.sender}
                     </span>
                     <Badge variant="outline" className={getPriorityColor(email.priority)}>
                       {email.priority}
                     </Badge>
-                    <span className="text-xs text-gray-500 ml-auto">{formatTime(email.time)}</span>
+                    <span className="text-xs text-muted-foreground ml-auto">{formatTime(email.time)}</span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleStar(email.id, email.is_starred);
                       }}
                     >
-                      <Star className={`h-4 w-4 ${email.is_starred ? "text-yellow-500 fill-current" : "text-gray-400"}`} />
+                      <Star className={`h-4 w-4 ${email.is_starred ? "text-yellow-500 fill-current" : "text-muted-foreground"}`} />
                     </button>
                   </div>
                   
-                  <h3 className={`text-sm mb-1 ${!email.is_read ? "font-semibold text-gray-900" : "text-gray-800"}`}>
+                  <h3 className={`text-sm mb-1 ${!email.is_read ? "font-semibold text-foreground" : "text-card-foreground"}`}>
                     {email.subject}
                   </h3>
                   
-                  <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                  <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
                     {email.preview}
                   </p>
 

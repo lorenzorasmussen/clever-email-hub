@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Send, Bot, User, Sparkles, Mail, Calendar, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -89,115 +88,103 @@ export const AIChatInterface = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="flex flex-col h-full bg-background">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
+      <div className="p-6 border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="flex items-center gap-3 mb-2">
           <div className="relative">
             <Bot className="h-8 w-8 text-blue-600" />
             <Sparkles className="h-4 w-4 text-purple-500 absolute -top-1 -right-1" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">AI Assistant</h1>
-            <p className="text-sm text-gray-600">Your intelligent email, calendar & notes companion</p>
+            <h1 className="text-xl font-semibold text-foreground">AI Assistant</h1>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-sm text-muted-foreground">Online</span>
+            </div>
           </div>
         </div>
         
         <div className="flex gap-2">
-          <Badge variant="outline" className="text-blue-600 border-blue-200">
-            <Mail className="h-3 w-3 mr-1" />
-            12 Emails
+          <Badge variant="outline" className="gap-1 text-muted-foreground">
+            <Mail className="h-3 w-3" />
+            Emails
           </Badge>
-          <Badge variant="outline" className="text-green-600 border-green-200">
-            <Calendar className="h-3 w-3 mr-1" />
-            4 Events Today
+          <Badge variant="outline" className="gap-1 text-muted-foreground">
+            <Calendar className="h-3 w-3" />
+            Calendar
           </Badge>
-          <Badge variant="outline" className="text-purple-600 border-purple-200">
-            <FileText className="h-3 w-3 mr-1" />
-            4 Notes
+          <Badge variant="outline" className="gap-1 text-muted-foreground">
+            <FileText className="h-3 w-3" />
+            Notes
           </Badge>
         </div>
       </div>
 
-      {/* Chat Messages */}
-      <div className="flex-1 p-6 overflow-y-auto space-y-4">
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-4">
         {messages.map((message) => (
-          <div key={message.id} className={`flex gap-3 ${message.type === "user" ? "justify-end" : ""}`}>
-            {message.type === "ai" && (
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                <Bot className="h-4 w-4 text-blue-600" />
+          <div
+            key={message.id}
+            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} mb-4`}
+          >
+            <div
+              className={`max-w-xs lg:max-w-md xl:max-w-lg rounded-lg p-4 ${
+                message.type === 'user'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-card border border-border text-card-foreground'
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                {message.type === 'ai' ? (
+                  <Bot className="h-4 w-4 text-blue-600" />
+                ) : (
+                  <User className="h-4 w-4" />
+                )}
+                <span className={`text-xs ${message.type === 'user' ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
+                  {message.timestamp}
+                </span>
               </div>
-            )}
-            
-            <div className={`max-w-2xl ${message.type === "user" ? "order-first" : ""}`}>
-              <div className={`p-4 rounded-lg ${
-                message.type === "user" 
-                  ? "bg-blue-600 text-white ml-auto" 
-                  : "bg-white shadow-sm border border-gray-100"
-              }`}>
-                <p className="text-sm leading-relaxed">{message.content}</p>
-              </div>
-              
+              <p className="text-sm leading-relaxed">{message.content}</p>
+
               {message.suggestions && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {message.suggestions.map((suggestion, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleSuggestionClick(suggestion)}
-                      className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full text-gray-700 transition-colors"
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
+                <div className="mt-3 space-y-2">
+                  <p className="text-xs text-muted-foreground">Suggestions:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {message.suggestions.map((suggestion, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        className="text-xs px-2 py-1 bg-accent text-accent-foreground rounded-full hover:bg-accent/80 transition-colors"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
-              
-              <p className="text-xs text-gray-500 mt-2">{message.timestamp}</p>
             </div>
-            
-            {message.type === "user" && (
-              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                <User className="h-4 w-4 text-gray-600" />
-              </div>
-            )}
           </div>
         ))}
       </div>
 
-      {/* Input Area */}
-      <div className="p-6 border-t border-gray-200 bg-white/80 backdrop-blur-sm">
-        <div className="flex gap-3">
+      {/* Input */}
+      <div className="p-6 border-t border-border bg-card">
+        <div className="flex gap-2">
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Ask me about your emails, calendar, or notes..."
-            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+            placeholder="Ask me anything about your emails, calendar, or notes..."
             className="flex-1"
           />
-          <Button onClick={handleSendMessage} className="px-6">
+          <Button onClick={handleSendMessage} className="px-4">
             <Send className="h-4 w-4" />
           </Button>
         </div>
-        
-        <div className="flex flex-wrap gap-2 mt-3">
-          <button
-            onClick={() => handleSuggestionClick("Show me important emails")}
-            className="px-3 py-1 text-xs bg-blue-100 hover:bg-blue-200 rounded-full text-blue-700 transition-colors"
-          >
-            📧 Important emails
-          </button>
-          <button
-            onClick={() => handleSuggestionClick("What's on my calendar today?")}
-            className="px-3 py-1 text-xs bg-green-100 hover:bg-green-200 rounded-full text-green-700 transition-colors"
-          >
-            📅 Today's schedule
-          </button>
-          <button
-            onClick={() => handleSuggestionClick("Summarize my recent emails")}
-            className="px-3 py-1 text-xs bg-purple-100 hover:bg-purple-200 rounded-full text-purple-700 transition-colors"
-          >
-            ✨ Summarize emails
-          </button>
+        <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
+          <Sparkles className="h-3 w-3" />
+          <span>AI can help with email management, calendar optimization, and intelligent note-taking</span>
         </div>
       </div>
     </div>
